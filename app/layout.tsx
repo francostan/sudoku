@@ -24,6 +24,25 @@ export const metadata: Metadata = {
   description: "Elegant Sudoku game with AI-powered solving analysis",
   authors: [{ name: "francostan" }],
   keywords: ["sudoku", "puzzle", "game", "AI analysis", "cognitive training"],
+  openGraph: {
+    title: "Sudoku Game",
+    description: "Elegant Sudoku game with AI-powered solving analysis",
+    images: [
+      {
+        url: "/preview.jpg",
+        width: 1200,
+        height: 630,
+        alt: "Sudoku Game Preview",
+      },
+    ],
+    type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Sudoku Game",
+    description: "Elegant Sudoku game with AI-powered solving analysis",
+    images: ["/preview.jpg"],
+  },
 };
 
 export default function RootLayout({
