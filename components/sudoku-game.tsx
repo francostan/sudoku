@@ -4,6 +4,7 @@ import { useState, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { RotateCcw, Sparkles } from "lucide-react";
 import { generateSudoku, isValidMove, isSolved } from "@/lib/sudoku-utils";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 type Cell = {
   value: number;
@@ -44,6 +45,8 @@ export default function SudokuGame() {
   const [notificationMessage, setNotificationMessage] = useState<string>("");
   const moveLogRef = useRef<HTMLDivElement>(null);
   const navigationTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+  const isMobile = useIsMobile();
 
   const columnLabels = ["A", "B", "C", "D", "E", "F", "G", "H", "I"];
   const rowLabels = ["1", "2", "3", "4", "5", "6", "7", "8", "9"];
@@ -874,14 +877,14 @@ For each weakness, provide:
 
             <div className="flex justify-center">
               <div className="inline-flex flex-col gap-3">
-                <div className="flex items-center gap-0 pl-9 md:pl-10">
+                <div className="flex items-center gap-0 pl-8 sm:pl-9 md:pl-10">
                   {columnLabels.map((label, index) => {
                     const isHighlighted = selectedCell?.col === index;
                     return (
                       <div
                         key={label}
                         className={`
-                          w-11 h-6 md:w-14 md:h-7 flex items-center justify-center
+                          w-10 sm:w-11 md:w-14 h-6 md:h-7 flex items-center justify-center
                           text-[10px] md:text-xs font-mono tracking-[0.25em] uppercase
                           transition-all duration-200 ease-out
                           ${isHighlighted ? "text-foreground/90 font-semibold scale-110" : "text-muted-foreground/40"}
@@ -893,7 +896,7 @@ For each weakness, provide:
                   })}
                 </div>
 
-                <div className="flex items-center gap-3">
+                <div className="flex items-center gap-2 sm:gap-3">
                   <div className="flex flex-col gap-0">
                     {rowLabels.map((label, index) => {
                       const isHighlighted = selectedCell?.row === index;
@@ -901,7 +904,7 @@ For each weakness, provide:
                         <div
                           key={label}
                           className={`
-                            w-6 h-11 md:w-7 md:h-14 flex items-center justify-center
+                            w-6 h-10 sm:w-6 sm:h-11 md:w-7 md:h-14 flex items-center justify-center
                             text-[10px] md:text-xs font-mono tracking-[0.25em]
                             transition-all duration-200 ease-out
                             ${isHighlighted ? "text-foreground/90 font-semibold scale-110" : "text-muted-foreground/40"}
@@ -945,8 +948,8 @@ For each weakness, provide:
                             key={`${rowIndex}-${colIndex}`}
                             onClick={() => handleCellClick(rowIndex, colIndex)}
                             className={`
-                              w-11 h-11 md:w-14 md:h-14 flex items-center justify-center
-                              text-xl md:text-2xl font-normal relative
+                              w-10 h-10 sm:w-11 sm:h-11 md:w-14 md:h-14 flex items-center justify-center
+                              text-lg sm:text-xl md:text-2xl font-normal relative
                               transition-all duration-200 ease-out
                               ${borderRight ? "border-r-[2.5px] border-foreground/90" : "border-r border-border/25"}
                               ${borderBottom ? "border-b-[2.5px] border-foreground/90" : "border-b border-border/25"}
@@ -972,7 +975,7 @@ For each weakness, provide:
             </div>
 
             <div className="flex justify-center">
-              <div className="grid grid-cols-5 gap-2.5 max-w-md">
+              <div className="grid grid-cols-5 gap-2 sm:gap-2.5 max-w-md">
                 {[1, 2, 3, 4, 5, 6, 7, 8, 9].map((num) => (
                   <Button
                     key={num}
@@ -984,7 +987,7 @@ For each weakness, provide:
                       board[selectedCell.row][selectedCell.col].isFixed
                     }
                     className={`
-                      text-xl font-normal h-14 w-14 md:h-16 md:w-16 rounded-xl
+                      text-lg sm:text-xl font-normal h-14 w-14 sm:h-16 sm:w-16 md:h-16 md:w-16 rounded-xl
                       transition-all duration-200 ease-out
                       hover:scale-105 hover:bg-accent/50 hover:border-foreground/30
                       active:scale-95
@@ -1004,7 +1007,7 @@ For each weakness, provide:
                     board[selectedCell.row][selectedCell.col].isFixed
                   }
                   className={`
-                    text-[10px] font-medium h-14 w-14 md:h-16 md:w-16 rounded-xl tracking-wider uppercase
+                    text-[10px] font-medium h-14 w-14 sm:h-16 sm:w-16 md:h-16 md:w-16 rounded-xl tracking-wider uppercase
                     transition-all duration-200 ease-out
                     hover:scale-105 hover:bg-destructive/10 hover:border-destructive/40 hover:text-destructive
                     active:scale-95
@@ -1296,7 +1299,7 @@ For each weakness, provide:
       )}
 
       {/* Copy Notification Toast */}
-      {showCopyNotification && (
+      {showCopyNotification && !isMobile && (
         <div className="fixed bottom-8 left-1/2 -translate-x-1/2 z-50 animate-scale-in">
           <div className="bg-foreground text-background px-6 py-3 rounded-xl shadow-lg flex items-center gap-3">
             <div className="text-lg">✓</div>
