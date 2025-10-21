@@ -454,62 +454,130 @@ For each weakness, provide:
     // Try to use q parameter if prompt is not too long
     const maxSafeLength = 2000; // Conservative browser URL limit
     const encodedPrompt = encodeURIComponent(prompt);
-    
-    const baseUrl = selectedAI === "chatgpt"
-      ? "https://chat.openai.com/"
-      : "https://claude.ai/new";
-    
+
+    const baseUrl =
+      selectedAI === "chatgpt"
+        ? "https://chat.openai.com/"
+        : "https://claude.ai/new";
+
     const urlWithQ = `${baseUrl}?q=${encodedPrompt}`;
-    
+
     // Check if URL would be too long
     const useFallback = urlWithQ.length > maxSafeLength;
-    
+
     if (useFallback) {
       // URL too long - open base page, user will paste
       window.open(baseUrl, "_blank");
       setNotificationMessage("Prompt copied! Paste it in the chat");
-      console.log(`⚠️ Prompt too long (${urlWithQ.length} chars) - using clipboard fallback`);
+      console.log(
+        `⚠️ Prompt too long (${urlWithQ.length} chars) - using clipboard fallback`,
+      );
     } else {
       // URL safe - use q parameter to pre-fill
       window.open(urlWithQ, "_blank");
       setNotificationMessage("Prompt pre-filled! Review and send");
       console.log(`✓ Using q parameter (${urlWithQ.length} chars)`);
     }
-    
+
     // Show notification
     setShowCopyNotification(true);
     setTimeout(() => setShowCopyNotification(false), 4000);
   };
 
+  const playClickSound = () => {
+    try {
+      const audioContext = new (window.AudioContext ||
+        (window as any).webkitAudioContext)();
+      const oscillator = audioContext.createOscillator();
+      const gainNode = audioContext.createGain();
+
+      oscillator.connect(gainNode);
+      gainNode.connect(audioContext.destination);
+
+      oscillator.frequency.value = 800; // Pleasant high click
+      oscillator.type = "sine";
+
+      gainNode.gain.setValueAtTime(0.15, audioContext.currentTime);
+      gainNode.gain.exponentialRampToValueAtTime(
+        0.01,
+        audioContext.currentTime + 0.05,
+      );
+
+      oscillator.start(audioContext.currentTime);
+      oscillator.stop(audioContext.currentTime + 0.05);
+    } catch (error) {
+      console.log("Audio playback not supported:", error);
+    }
+  };
+
+  const playSelectSound = () => {
+    try {
+      const audioContext = new (window.AudioContext ||
+        (window as any).webkitAudioContext)();
+      const oscillator = audioContext.createOscillator();
+      const gainNode = audioContext.createGain();
+
+      oscillator.connect(gainNode);
+      gainNode.connect(audioContext.destination);
+
+      oscillator.frequency.value = 600; // Softer selection sound
+      oscillator.type = "sine";
+
+      gainNode.gain.setValueAtTime(0.1, audioContext.currentTime);
+      gainNode.gain.exponentialRampToValueAtTime(
+        0.01,
+        audioContext.currentTime + 0.08,
+      );
+
+      oscillator.start(audioContext.currentTime);
+      oscillator.stop(audioContext.currentTime + 0.08);
+    } catch (error) {
+      console.log("Audio playback not supported:", error);
+    }
+  };
+
+  const handleAISelect = (ai: "chatgpt" | "claude") => {
+    playSelectSound();
+    setSelectedAI(ai);
+  };
+
   const playSuccessSound = () => {
     try {
-      const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
-      
+      const audioContext = new (window.AudioContext ||
+        (window as any).webkitAudioContext)();
+
       // Create a pleasant success melody
-      const playNote = (frequency: number, startTime: number, duration: number) => {
+      const playNote = (
+        frequency: number,
+        startTime: number,
+        duration: number,
+      ) => {
         const oscillator = audioContext.createOscillator();
         const gainNode = audioContext.createGain();
-        
+
         oscillator.connect(gainNode);
         gainNode.connect(audioContext.destination);
-        
+
         oscillator.frequency.value = frequency;
-        oscillator.type = 'sine';
-        
+        oscillator.type = "sine";
+
         gainNode.gain.setValueAtTime(0.3, audioContext.currentTime + startTime);
-        gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + startTime + duration);
-        
+        gainNode.gain.exponentialRampToValueAtTime(
+          0.01,
+          audioContext.currentTime + startTime + duration,
+        );
+
         oscillator.start(audioContext.currentTime + startTime);
         oscillator.stop(audioContext.currentTime + startTime + duration);
       };
-      
+
       // Play a cheerful ascending melody (C-E-G-C major chord arpeggio)
-      playNote(523.25, 0, 0.15);    // C5
-      playNote(659.25, 0.1, 0.15);  // E5
-      playNote(783.99, 0.2, 0.2);   // G5
-      playNote(1046.50, 0.35, 0.3); // C6
+      playNote(523.25, 0, 0.15); // C5
+      playNote(659.25, 0.1, 0.15); // E5
+      playNote(783.99, 0.2, 0.2); // G5
+      playNote(1046.5, 0.35, 0.3); // C6
     } catch (error) {
-      console.log('Audio playback not supported:', error);
+      console.log("Audio playback not supported:", error);
     }
   };
 
@@ -535,6 +603,9 @@ For each weakness, provide:
 
     const { row, col } = selectedCell;
     if (board[row][col].isFixed) return;
+
+    // Play click sound
+    playClickSound();
 
     if (!isTimerRunning) {
       const now = Date.now();
@@ -566,16 +637,16 @@ For each weakness, provide:
     if (isSolved(newBoard)) {
       setIsComplete(true);
       setIsTimerRunning(false);
-      
+
       // Play success sound
       playSuccessSound();
-      
+
       // Trigger celebration confetti
       setTimeout(() => {
         confetti({
           particleCount: 100,
           spread: 70,
-          origin: { y: 0.6 }
+          origin: { y: 0.6 },
         });
       }, 100);
       setTimeout(() => {
@@ -583,7 +654,7 @@ For each weakness, provide:
           particleCount: 50,
           angle: 60,
           spread: 55,
-          origin: { x: 0 }
+          origin: { x: 0 },
         });
       }, 200);
       setTimeout(() => {
@@ -591,7 +662,7 @@ For each weakness, provide:
           particleCount: 50,
           angle: 120,
           spread: 55,
-          origin: { x: 1 }
+          origin: { x: 1 },
         });
       }, 300);
     }
@@ -874,7 +945,7 @@ For each weakness, provide:
 
                   <div className="flex items-center justify-center gap-4 px-2">
                     <button
-                      onClick={() => setSelectedAI("chatgpt")}
+                      onClick={() => handleAISelect("chatgpt")}
                       className={`
                         flex items-center gap-2.5 px-3 py-2 rounded-lg
                         transition-all duration-200 ease-out
@@ -898,7 +969,7 @@ For each weakness, provide:
                     </button>
 
                     <button
-                      onClick={() => setSelectedAI("claude")}
+                      onClick={() => handleAISelect("claude")}
                       className={`
                         flex items-center gap-2.5 px-3 py-2 rounded-lg
                         transition-all duration-200 ease-out
@@ -1101,19 +1172,99 @@ For each weakness, provide:
                         Well Done
                       </p>
                     </div>
-                    
+
                     <div className="grid grid-cols-2 gap-4 py-4">
                       <div className="bg-muted/30 rounded-xl p-4">
-                        <p className="text-xs text-muted-foreground/60 uppercase tracking-wider font-mono mb-1">Time</p>
-                        <p className="text-2xl font-mono font-light">{formatTime(elapsedTime)}</p>
+                        <p className="text-xs text-muted-foreground/60 uppercase tracking-wider font-mono mb-1">
+                          Time
+                        </p>
+                        <p className="text-2xl font-mono font-light">
+                          {formatTime(elapsedTime)}
+                        </p>
                       </div>
                       <div className="bg-muted/30 rounded-xl p-4">
-                        <p className="text-xs text-muted-foreground/60 uppercase tracking-wider font-mono mb-1">Moves</p>
-                        <p className="text-2xl font-mono font-light">{moveHistory.length}</p>
+                        <p className="text-xs text-muted-foreground/60 uppercase tracking-wider font-mono mb-1">
+                          Moves
+                        </p>
+                        <p className="text-2xl font-mono font-light">
+                          {moveHistory.length}
+                        </p>
                       </div>
                     </div>
 
-                    <div className="space-y-3 pt-2">
+                    <div className="space-y-4 pt-2">
+                      <div className="h-px bg-border/30" />
+
+                      <div>
+                        <div className="flex items-center justify-center gap-3 mb-3">
+                          <button
+                            onClick={() => handleAISelect("chatgpt")}
+                            className={`
+                              flex items-center gap-2 px-4 py-2 rounded-lg
+                              transition-all duration-200 ease-out
+                              ${selectedAI === "chatgpt" ? "bg-foreground/10" : "hover:bg-muted/30"}
+                            `}
+                          >
+                            <div
+                              className={`rounded-full border-[2px] flex items-center justify-center w-[13px] h-[13px]
+                                ${selectedAI === "chatgpt" ? "border-foreground/80" : "border-foreground/30"}`}
+                            >
+                              {selectedAI === "chatgpt" && (
+                                <div className="w-2 h-2 rounded-full bg-foreground/80" />
+                              )}
+                            </div>
+                            <span
+                              className={`font-mono text-xs tracking-wide
+                                ${selectedAI === "chatgpt" ? "text-foreground/90" : "text-foreground/40"}`}
+                            >
+                              ChatGPT
+                            </span>
+                          </button>
+
+                          <button
+                            onClick={() => handleAISelect("claude")}
+                            className={`
+                              flex items-center gap-2 px-4 py-2 rounded-lg
+                              transition-all duration-200 ease-out
+                              ${selectedAI === "claude" ? "bg-foreground/10" : "hover:bg-muted/30"}
+                            `}
+                          >
+                            <div
+                              className={`rounded-full border-[2px] flex items-center justify-center w-[13px] h-[13px]
+                                ${selectedAI === "claude" ? "border-foreground/80" : "border-foreground/30"}`}
+                            >
+                              {selectedAI === "claude" && (
+                                <div className="w-2 h-2 rounded-full bg-foreground/80" />
+                              )}
+                            </div>
+                            <span
+                              className={`font-mono text-xs tracking-wide
+                                ${selectedAI === "claude" ? "text-foreground/90" : "text-foreground/40"}`}
+                            >
+                              Claude
+                            </span>
+                          </button>
+                        </div>
+
+                        <button
+                          onClick={handleAnalyzeClick}
+                          className="
+                            w-full flex items-center justify-center gap-2
+                            px-5 py-3 rounded-xl text-sm
+                            bg-accent/50 hover:bg-accent/70
+                            border border-border/40 hover:border-foreground/30
+                            backdrop-blur-sm
+                            transition-all duration-200 ease-out
+                            hover:scale-[1.02] active:scale-[0.98]
+                            font-mono font-medium text-foreground/90
+                          "
+                        >
+                          <span>Analyze it</span>
+                        </button>
+                      </div>
+
+                      <div className="h-px bg-border/30" />
+
                       <Button
                         onClick={() => startNewGame(difficulty)}
                         className="w-full h-12 text-base rounded-xl"
@@ -1122,7 +1273,11 @@ For each weakness, provide:
                         Play Again
                       </Button>
                       <p className="text-xs text-muted-foreground/50 font-mono">
-                        Press <kbd className="px-2 py-1 bg-muted/50 rounded text-[10px]">N</kbd> for new game
+                        Press{" "}
+                        <kbd className="px-2 py-1 bg-muted/50 rounded text-[10px]">
+                          N
+                        </kbd>{" "}
+                        for new game
                       </p>
                     </div>
                   </div>
@@ -1193,7 +1348,7 @@ For each weakness, provide:
 
               <div className="flex items-center justify-center gap-4 px-2">
                 <button
-                  onClick={() => setSelectedAI("chatgpt")}
+                  onClick={() => handleAISelect("chatgpt")}
                   className={`
                     flex items-center gap-2.5 px-3 py-2 rounded-lg
                     transition-all duration-200 ease-out
@@ -1217,7 +1372,7 @@ For each weakness, provide:
                 </button>
 
                 <button
-                  onClick={() => setSelectedAI("claude")}
+                  onClick={() => handleAISelect("claude")}
                   className={`
                     flex items-center gap-2.5 px-3 py-2 rounded-lg
                     transition-all duration-200 ease-out
@@ -1407,9 +1562,7 @@ For each weakness, provide:
         <div className="fixed bottom-8 left-1/2 -translate-x-1/2 z-50 animate-scale-in">
           <div className="bg-foreground text-background px-6 py-3 rounded-xl shadow-lg flex items-center gap-3">
             <div className="text-lg">✓</div>
-            <div className="text-sm font-medium">
-              {notificationMessage}
-            </div>
+            <div className="text-sm font-medium">{notificationMessage}</div>
           </div>
         </div>
       )}
