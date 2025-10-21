@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { RotateCcw, Sparkles } from "lucide-react";
 import { generateSudoku, isValidMove, isSolved } from "@/lib/sudoku-utils";
 import { useIsMobile } from "@/hooks/use-mobile";
+import confetti from "canvas-confetti";
 
 type Cell = {
   value: number;
@@ -85,6 +86,13 @@ export default function SudokuGame() {
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       const key = e.key.toUpperCase();
+
+      // New game shortcut
+      if (key === "N" && !e.metaKey && !e.ctrlKey && !showHelp) {
+        e.preventDefault();
+        startNewGame(difficulty);
+        return;
+      }
 
       // Help overlay toggle
       if (key === "?" && !e.metaKey && !e.ctrlKey) {
@@ -473,6 +481,38 @@ For each weakness, provide:
     setTimeout(() => setShowCopyNotification(false), 4000);
   };
 
+  const playSuccessSound = () => {
+    try {
+      const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
+      
+      // Create a pleasant success melody
+      const playNote = (frequency: number, startTime: number, duration: number) => {
+        const oscillator = audioContext.createOscillator();
+        const gainNode = audioContext.createGain();
+        
+        oscillator.connect(gainNode);
+        gainNode.connect(audioContext.destination);
+        
+        oscillator.frequency.value = frequency;
+        oscillator.type = 'sine';
+        
+        gainNode.gain.setValueAtTime(0.3, audioContext.currentTime + startTime);
+        gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + startTime + duration);
+        
+        oscillator.start(audioContext.currentTime + startTime);
+        oscillator.stop(audioContext.currentTime + startTime + duration);
+      };
+      
+      // Play a cheerful ascending melody (C-E-G-C major chord arpeggio)
+      playNote(523.25, 0, 0.15);    // C5
+      playNote(659.25, 0.1, 0.15);  // E5
+      playNote(783.99, 0.2, 0.2);   // G5
+      playNote(1046.50, 0.35, 0.3); // C6
+    } catch (error) {
+      console.log('Audio playback not supported:', error);
+    }
+  };
+
   const startNewGame = (diff: Difficulty) => {
     const newBoard = generateSudoku(diff);
     setBoard(newBoard);
@@ -526,6 +566,34 @@ For each weakness, provide:
     if (isSolved(newBoard)) {
       setIsComplete(true);
       setIsTimerRunning(false);
+      
+      // Play success sound
+      playSuccessSound();
+      
+      // Trigger celebration confetti
+      setTimeout(() => {
+        confetti({
+          particleCount: 100,
+          spread: 70,
+          origin: { y: 0.6 }
+        });
+      }, 100);
+      setTimeout(() => {
+        confetti({
+          particleCount: 50,
+          angle: 60,
+          spread: 55,
+          origin: { x: 0 }
+        });
+      }, 200);
+      setTimeout(() => {
+        confetti({
+          particleCount: 50,
+          angle: 120,
+          spread: 55,
+          origin: { x: 1 }
+        });
+      }, 300);
     }
   };
 
@@ -1021,14 +1089,43 @@ For each weakness, provide:
             </div>
 
             {isComplete && (
-              <div className="text-center space-y-3 animate-in fade-in slide-in-from-bottom-4 duration-500">
-                <div className="inline-block px-10 py-5 rounded-2xl bg-foreground/5 backdrop-blur-sm border border-foreground/10">
-                  <p className="text-2xl md:text-3xl font-light text-balance tracking-tight">
-                    Complete
-                  </p>
-                  <p className="text-xs text-muted-foreground/70 font-light tracking-[0.3em] uppercase mt-2">
-                    Well Done
-                  </p>
+              <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-40 animate-in fade-in duration-300">
+                <div className="bg-background border-2 border-foreground/20 rounded-3xl p-10 shadow-2xl max-w-md mx-4 animate-in zoom-in-95 slide-in-from-bottom-4 duration-500">
+                  <div className="text-center space-y-6">
+                    <div className="text-6xl">🎉</div>
+                    <div>
+                      <p className="text-4xl font-light text-balance tracking-tight mb-2">
+                        Complete!
+                      </p>
+                      <p className="text-sm text-muted-foreground/70 font-light tracking-wider uppercase">
+                        Well Done
+                      </p>
+                    </div>
+                    
+                    <div className="grid grid-cols-2 gap-4 py-4">
+                      <div className="bg-muted/30 rounded-xl p-4">
+                        <p className="text-xs text-muted-foreground/60 uppercase tracking-wider font-mono mb-1">Time</p>
+                        <p className="text-2xl font-mono font-light">{formatTime(elapsedTime)}</p>
+                      </div>
+                      <div className="bg-muted/30 rounded-xl p-4">
+                        <p className="text-xs text-muted-foreground/60 uppercase tracking-wider font-mono mb-1">Moves</p>
+                        <p className="text-2xl font-mono font-light">{moveHistory.length}</p>
+                      </div>
+                    </div>
+
+                    <div className="space-y-3 pt-2">
+                      <Button
+                        onClick={() => startNewGame(difficulty)}
+                        className="w-full h-12 text-base rounded-xl"
+                        size="lg"
+                      >
+                        Play Again
+                      </Button>
+                      <p className="text-xs text-muted-foreground/50 font-mono">
+                        Press <kbd className="px-2 py-1 bg-muted/50 rounded text-[10px]">N</kbd> for new game
+                      </p>
+                    </div>
+                  </div>
                 </div>
               </div>
             )}
@@ -1273,6 +1370,13 @@ For each weakness, provide:
                   Other
                 </h3>
                 <div className="space-y-2">
+                  <div className="flex items-center justify-between py-2 px-3 bg-muted/20 rounded-lg">
+                    <span className="text-sm">New game</span>
+                    <kbd className="px-3 py-1 bg-foreground/10 rounded font-mono text-xs border border-foreground/20">
+                      N
+                    </kbd>
+                  </div>
+
                   <div className="flex items-center justify-between py-2 px-3 bg-muted/20 rounded-lg">
                     <span className="text-sm">Show/hide this help</span>
                     <kbd className="px-3 py-1 bg-foreground/10 rounded font-mono text-xs border border-foreground/20">
