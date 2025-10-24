@@ -536,6 +536,32 @@ For each weakness, provide:
     }
   };
 
+  const playCellSelectSound = () => {
+    try {
+      const audioContext = new (window.AudioContext ||
+        (window as any).webkitAudioContext)();
+      const oscillator = audioContext.createOscillator();
+      const gainNode = audioContext.createGain();
+
+      oscillator.connect(gainNode);
+      gainNode.connect(audioContext.destination);
+
+      oscillator.frequency.value = 500; // Softer than number input for frequent action
+      oscillator.type = "sine";
+
+      gainNode.gain.setValueAtTime(0.08, audioContext.currentTime);
+      gainNode.gain.exponentialRampToValueAtTime(
+        0.01,
+        audioContext.currentTime + 0.06, // Shorter duration for frequent clicking
+      );
+
+      oscillator.start(audioContext.currentTime);
+      oscillator.stop(audioContext.currentTime + 0.06);
+    } catch (error) {
+      console.log("Audio playback not supported:", error);
+    }
+  };
+
   const handleAISelect = (ai: "chatgpt" | "claude") => {
     playSelectSound();
     setSelectedAI(ai);
@@ -595,6 +621,14 @@ For each weakness, provide:
   };
 
   const handleCellClick = (row: number, col: number) => {
+    // Only play sound if selecting a different cell (avoid duplicate sounds)
+    const isAlreadySelected = 
+      selectedCell?.row === row && selectedCell?.col === col;
+    
+    if (!isAlreadySelected) {
+      playCellSelectSound();
+    }
+    
     setSelectedCell({ row, col });
   };
 
