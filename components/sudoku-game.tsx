@@ -1025,8 +1025,10 @@ For each weakness, provide:
                         className={`
                           w-10 sm:w-11 md:w-14 h-6 md:h-7 flex items-center justify-center
                           text-[10px] md:text-xs font-mono tracking-[0.25em] uppercase
-                          transition-all duration-200 ease-out
-                          ${isHighlighted ? "text-foreground/90 font-semibold scale-110" : "text-muted-foreground/40"}
+                          transition-all duration-400 ease-[cubic-bezier(0.34,1.56,0.64,1)]
+                          ${isHighlighted ? 
+                            "text-accent font-bold scale-115 rotate-1 drop-shadow-[0_0_8px_oklch(0.93_0.008_75)]" : 
+                            "text-muted-foreground/40"}
                         `}
                       >
                         {label}
@@ -1045,8 +1047,10 @@ For each weakness, provide:
                           className={`
                             w-6 h-10 sm:w-6 sm:h-11 md:w-7 md:h-14 flex items-center justify-center
                             text-[10px] md:text-xs font-mono tracking-[0.25em]
-                            transition-all duration-200 ease-out
-                            ${isHighlighted ? "text-foreground/90 font-semibold scale-110" : "text-muted-foreground/40"}
+                            transition-all duration-400 ease-[cubic-bezier(0.34,1.56,0.64,1)]
+                            ${isHighlighted ? 
+                              "text-accent font-bold scale-115 -rotate-1 drop-shadow-[0_0_8px_oklch(0.93_0.008_75)]" : 
+                              "text-muted-foreground/40"}
                             ${(index + 1) % 3 === 0 && index !== 8 ? "mb-[2.5px]" : ""}
                           `}
                         >
@@ -1057,9 +1061,22 @@ For each weakness, provide:
                   </div>
 
                   <div
-                    className="inline-grid grid-cols-9 gap-0 border-[2.5px] border-foreground/90 rounded-2xl overflow-hidden
+                    className="inline-grid grid-cols-9 gap-0 border-[2.5px] border-foreground/90 rounded-2xl overflow-hidden relative
                            shadow-[0_4px_32px_rgba(0,0,0,0.06)] bg-card/90 backdrop-blur-sm"
                   >
+                    {/* 3x3 Box Overlay */}
+                    {selectedCell && (
+                      <div 
+                        className="absolute pointer-events-none border-2 border-accent/60 rounded-lg 
+                                   animate-[box-overlay-slide_250ms_cubic-bezier(0.34,1.56,0.64,1)]"
+                        style={{
+                          left: `${Math.floor(selectedCell.col / 3) * 33.33}%`,
+                          top: `${Math.floor(selectedCell.row / 3) * 33.33}%`,
+                          width: '33.33%',
+                          height: '33.33%',
+                        }}
+                      />
+                    )}
                     {board.map((row, rowIndex) =>
                       row.map((cell, colIndex) => {
                         const isSelected =
@@ -1077,6 +1094,18 @@ For each weakness, provide:
                           recentlyFilled?.row === rowIndex &&
                           recentlyFilled?.col === colIndex;
 
+                        // New focus mode classifications
+                        const isRelevant = isInSelectedRow || isInSelectedCol || isInSelectedBox;
+                        const isBlurred = selectedCell && !isRelevant;
+                        const needsHighlight = isInSelectedRow || isInSelectedCol;
+                        const inActiveBox = isInSelectedBox && !needsHighlight;
+
+                        // Calculate distance-based delay for staggered animations
+                        const distance = selectedCell ? 
+                          Math.abs(rowIndex - selectedCell.row) + 
+                          Math.abs(colIndex - selectedCell.col) : 0;
+                        const transitionDelay = isRelevant && selectedCell ? `${distance * 15}ms` : '0ms';
+
                         const borderRight =
                           (colIndex + 1) % 3 === 0 && colIndex !== 8;
                         const borderBottom =
@@ -1089,19 +1118,27 @@ For each weakness, provide:
                             className={`
                               w-10 h-10 sm:w-11 sm:h-11 md:w-14 md:h-14 flex items-center justify-center
                               text-lg sm:text-xl md:text-2xl font-normal relative
-                              transition-all duration-200 ease-out
+                              transition-[background-color,transform,opacity,filter] 
+                              duration-500 
+                              ease-[cubic-bezier(0.4,0.0,0.2,1)]
                               ${borderRight ? "border-r-[2.5px] border-foreground/90" : "border-r border-border/25"}
                               ${borderBottom ? "border-b-[2.5px] border-foreground/90" : "border-b border-border/25"}
                               ${cell.isFixed ? "font-semibold text-foreground" : "text-foreground/50"}
-                              ${isSelected ? "bg-accent/60 ring-2 ring-inset ring-foreground/20" : ""}
-                              ${!isSelected && (isInSelectedRow || isInSelectedCol) ? "bg-muted/40" : ""}
-                              ${!isSelected && isInSelectedBox && !isInSelectedRow && !isInSelectedCol ? "bg-muted/20" : ""}
-                              ${!isSelected && !isInSelectedRow && !isInSelectedCol && !isInSelectedBox ? "bg-card hover:bg-accent/30" : ""}
+                              ${isSelected ? 
+                                "bg-accent/60 ring-2 ring-inset ring-foreground/60 animate-[cell-select_300ms_cubic-bezier(0.34,1.56,0.64,1)_forwards]" : 
+                                ""}
+                              ${!isSelected && needsHighlight ? "bg-accent/50 animate-pulse-glow border border-accent/30" : ""}
+                              ${!isSelected && inActiveBox ? "bg-accent/25 shadow-inner" : ""}
+                              ${isBlurred ? "blur-[2px] opacity-40 scale-95" : ""}
+                              ${!isSelected && !isRelevant ? "bg-card hover:bg-accent/30" : ""}
+                              ${!isSelected && !selectedCell ? "bg-card hover:bg-accent/30" : ""}
+                              ${isRelevant && !isSelected ? "animate-slide-in-cell" : ""}
                               ${cell.isError ? "text-destructive animate-shake" : ""}
                               ${isRecentlyFilled ? "animate-scale-in" : ""}
                               cursor-pointer focus:outline-none
                               hover:scale-[1.03] active:scale-[0.97]
                             `}
+                            style={{ transitionDelay }}
                           >
                             {cell.value !== 0 ? cell.value : ""}
                           </button>

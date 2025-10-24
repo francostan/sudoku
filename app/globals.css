@@ -160,4 +160,102 @@
     .animate-shake {
         animation: shake 0.25s ease-in-out;
     }
+
+    @keyframes pulse-glow {
+        0%, 100% { 
+            opacity: 1; 
+            box-shadow: 0 0 8px rgba(0,0,0,0.05); 
+        }
+        50% { 
+            opacity: 0.85; 
+            box-shadow: 0 0 16px rgba(0,0,0,0.1); 
+        }
+    }
+
+    @keyframes slide-in-cell {
+        0% { 
+            transform: scale(0.95); 
+            opacity: 0.7; 
+        }
+        100% { 
+            transform: scale(1); 
+            opacity: 1; 
+        }
+    }
+
+    @keyframes label-activate {
+        0% { 
+            transform: scale(1) rotate(0deg); 
+        }
+        100% { 
+            transform: scale(1.2) rotate(2deg); 
+        }
+    }
+
+    .animate-pulse-glow {
+        animation: pulse-glow 2s ease-in-out infinite;
+    }
+
+    .animate-slide-in-cell {
+        animation: slide-in-cell 150ms cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+
+    @keyframes cell-select {
+        0% { transform: scale(1); }
+        50% { transform: scale(1.12); }
+        100% { transform: scale(1.05); }
+    }
+
+    @keyframes slide-out-cell {
+        0% { 
+            transform: scale(1); 
+            opacity: 1; 
+            filter: blur(0px);
+        }
+        100% { 
+            transform: scale(0.98); 
+            opacity: 0.6; 
+            filter: blur(1px);
+        }
+    }
+
+    @keyframes box-overlay-slide {
+        0% { 
+            transform: scale(0.92);
+            opacity: 0;
+            border-color: transparent;
+        }
+        60% {
+            border-color: oklch(0.93 0.008 75 / 0.8); /* Overshoot opacity */
+        }
+        100% { 
+            transform: scale(1);
+            opacity: 1;
+            border-color: oklch(0.93 0.008 75 / 0.6);
+        }
+    }
+
+    /* Add delay to pulse glow so it starts after entrance animation */
+    .animate-pulse-glow {
+        animation: pulse-glow 2s ease-in-out infinite;
+        animation-delay: 250ms;
+    }
+
+    /* Custom property for smooth blur transitions */
+    @property --blur-amount {
+        syntax: '<length>';
+        inherits: false;
+        initial-value: 0px;
+    }
+
+    /* Respect user motion preferences */
+    @media (prefers-reduced-motion: reduce) {
+        .animate-pulse-glow,
+        .animate-slide-in-cell,
+        .animate-slide-out-cell,
+        .animate-cell-select,
+        .animate-box-overlay-slide {
+            animation: none;
+        }
+    }
 }
